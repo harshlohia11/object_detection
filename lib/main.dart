@@ -75,6 +75,48 @@ class _TflitehomeState extends State<Tflitehome> {
     }
   }
 
+  pickImageCamera() async {
+    File image = await ImagePicker.pickImage(source: ImageSource.camera);
+    if (image == null)
+      return;
+    else {
+      setState(() {
+        _busy = true;
+      });
+      predictImage(image);
+    }
+  }
+
+  showPicker(context) {
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext bc) {
+          return SafeArea(
+            child: Container(
+              child: new Wrap(
+                children: <Widget>[
+                  new ListTile(
+                      leading: new Icon(Icons.photo_library),
+                      title: new Text('Photo Library'),
+                      onTap: () {
+                        pickImage();
+                        Navigator.of(context).pop();
+                      }),
+                  new ListTile(
+                    leading: new Icon(Icons.photo_camera),
+                    title: new Text('Camera'),
+                    onTap: () {
+                      pickImageCamera();
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+  }
+
   predictImage(File image) async {
     if (image == null) return;
     if (_model == yolo) {
@@ -166,7 +208,13 @@ class _TflitehomeState extends State<Tflitehome> {
       top: 0.0,
       left: 0.0,
       width: size.width,
-      child: _image == null ? Text("No image selected") : Image.file(_image),
+      child: _image == null
+          ? Center(
+              child: Text("No image selected",
+                  style:
+                      TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0)),
+            )
+          : Image.file(_image),
     ));
 
     stackChildren.addAll(renderBoxes(size));
@@ -176,12 +224,14 @@ class _TflitehomeState extends State<Tflitehome> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Object Detection"),
+        title: Center(child: Text("Object Detection")),
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add_a_photo),
         tooltip: 'Pick a image',
-        onPressed: pickImage,
+        onPressed: () {
+          showPicker(context);
+        },
       ),
       body: Stack(
         children: stackChildren,
